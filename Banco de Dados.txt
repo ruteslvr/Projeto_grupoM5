@@ -1,0 +1,325 @@
+1- Banco de Dados: blog
+
+Tabela: Posts 
+
+Campos: 
+id (int) Chave Primária  - Auto Incremente
+title varchar 255
+content text
+
+
+
+2 - Criar uma Pasta: projeto_final
+
+
+
+3 - Instalar o Express 
+npm i express dotenv mysql2
+npm i express dotenv mysql2
+
+
+
+4 - Criar um arquivo: .env
+
+
+
+5 - Iniciar o NPM
+npm ini
+
+
+
+6 - Criar um arquivo: index.js
+
+Inserir os comandos:
+const express = require("express")
+const app = express ()
+
+app.use(express.urlencoded({extended:false}))
+app.use (express.json())
+
+const PORT = process. env.PORT || 3000
+
+app.listen (PORT, () => {
+    console.log("Teste Servidor")
+})
+
+
+
+7 - No arquivo .env:
+
+PORT=3000
+DB_HOST=localhost
+DB_USERNAME=root
+DB_PASSWORD=
+DB_DBNAME=blog
+
+
+
+8 - Executar teste Servidor
+node index.js
+
+
+9 - Criar pasta: routes
+
+
+10 - Dentro da Pasta "routes", criar um arquivo: posts.router.js
+
+Inserir os seguintes comandos:
+
+const express = require('express')
+const router = express.Router()
+
+const postsController = require('../controller/posts.controller')
+
+router.get("/", postsController.getAll)
+
+module.exports = router
+
+
+
+
+11 - Criar Pasta controller
+
+Dentro da Pasta "controller", criar um arquivo: posts.controller.js
+
+
+Inserir os seguintes comandos:
+
+
+const postsController = {
+
+    getAll: (req, res) =>{
+        try{ //Repositório
+            res.json({message: "Get all Posts"})
+        } catch (error) {
+               console.log (error)
+        }
+    }
+}
+
+module.exports = postsController
+
+
+
+
+12 - No arquivo "index.js", linkar o arquivo de post e inserir a função .use
+
+const express = require("express")
+const app = express ()
+
+require('dotenv').config()
+
+const postsRouter = require ('./routes/posts.router') //Inserir a constante
+
+app.use(express.urlencoded({extended:false}))
+app.use (express.json())
+
+app.use("/api/v1/posts", postsRouter) //Utilizar a constante "postsRouter" na api
+
+const PORT = process. env.PORT || 3000
+
+app.listen (PORT, () => {
+    console.log("Teste Servidor")
+})
+
+
+
+13 - Testar a rota:
+localhost:3000/api/v1/posts
+
+
+14 - Criar uma nova Pasta: database
+
+Dentro da Pasta "database", criar um arquivo: index.js
+
+Inserir o seguinte código:
+
+//https://www.npmjs.com/package/mysql2
+
+//Conectar com o arquivo ".env"
+
+// get the client
+const mysql = require('mysql2')
+
+  // create the pool
+  const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DBNAME,
+});
+  
+
+module.exports = pool.promise()
+
+
+
+15 - No arquivo posts.controller.js, conectar com a base de dados (database)
+
+Inserir os seguintes comandos:
+const pool = require ("../database/index") //Conectando com a base de dados
+const postsController = {
+
+    getAll: async(req, res) => { //async - Sincronizar
+        try{ //Repositório
+            const [rows, fields] = await poll.query("select * from posts") //A constante irá receber os dados do repositório 
+            res.json({data:rows}) //Alterar para data:rows. Irá imprimir os dados do banco
+        } catch (error) {
+               console.log (error)
+        }
+    }
+}
+
+module.exports = postsController;
+
+
+16 - Inserir dados no Banco. Imagem: Inserindo Dados na Pasta.
+
+title = Teste
+content = Olá!
+
+INSERT INTO `posts` (`id`, `title`, `content`) VALUES (NULL, 'Teste', 'Olá!');
+
+
+
+17 - Testar a rota:
+localhost:3000/api/v1/posts
+
+
+18 - Abrir o Postman:
+https://www.postman.com/ - Visualizar o PowerPoint
+
+
+
+
+19 - No arquivo posts.controller.js, conectar os dados com o Banco.
+
+Inserir os seguintes comandos:
+
+
+const pool = require ("../database/index") //Conectando com a base de dados
+const postsController = {
+
+    getAll: async(req, res) => { //async - Sincronizar
+        try{ //Repositório
+            const [rows, fields] = await pool.query("select * from posts") //A constante irá receber os dados do repositório 
+            res.json({data:rows}) //Alterar para data:rows. Irá imprimir os dados do banco
+        } catch (error) {
+               console.log (error)
+        }
+    }, //Conectar os campos do banco e recursos (create, update, delete)
+    getById: async (req, res) => {
+        try {
+            const { id } = req.params
+            const [rows, fields] = await pool.query("select * from posts where id = ?", [id])
+
+            res.json({
+                data: rows
+            })
+
+            res.json({
+                data: rows
+            })
+
+        } catch (error) {
+            console.log(error)
+
+        }
+    },
+    create: async (req, res) => {
+        try {
+            const { title, content } = req.body
+            const sql = "insert into posts (title,content) values (?,?)"
+            const [rows, fields] = await pool.query(sql, [title, content])
+
+            res.json({
+                data: rows
+            })
+
+        } catch (error) {
+            console.log(error)
+            res.json({
+                status: "error"
+            })
+
+        }
+    },
+    update: async (req, res) => {
+        try {
+            const { title, content } = req.body
+            const { id } = req.params
+
+            const sql = "update posts set title = ?, content = ? where id = ?"
+            const [rows, fields] = await pool.query(sql, [title, content, id])
+
+            res.json({
+                data: rows
+            })
+
+        } catch (error) {
+            console.log(error)
+            res.json({
+                status: "error"
+            })
+
+        }
+    },
+    delete: async (req, res) => {
+        try {
+            const { id } = req.params
+
+            const sql = "delete from posts where id = ?"
+            const [rows, fields] = await pool.query(sql, [id])
+
+            res.json({
+                data: rows
+            })
+
+        } catch (error) {
+            console.log(error)
+            res.json({
+                status: "error"
+            })
+
+        }
+    }
+
+}
+
+module.exports = postsController;
+
+
+
+
+20 - Testar no Postman: Aquivo PowerPoint (slide 8)
+
+http://localhost:3000/api/v1/posts/2
+
+
+
+
+21 - No arquivo posts.router.js, inserir os seguintes comandos:
+
+const express = require('express')
+const router = express.Router()
+
+const postsController = require('../controller/posts.controller')
+
+router.get("/", postsController.getAll)
+router.get("/:id", postsController.getById)
+router.post("/", postsController.create)
+router.put("/:id", postsController.update)
+router.delete("/:id", postsController.delete)
+
+module.exports = router
+
+
+
+
+22- Inserir Dados no Postman: Aquivo PowerPoint (slides 9 e 10)
+
+http://localhost:3000/api/v1/posts
+
+
+
+
